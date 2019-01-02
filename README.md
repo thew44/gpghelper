@@ -1,5 +1,5 @@
 # gpghelper
-A tool to help using SSH with GPG keys on Windows
+A tool to help using SSH with GPG keys on Windows.
 
 ![screenshot of gpghelper](screenshot.png)
 
@@ -9,6 +9,8 @@ Is is intended to work under Windows with [GPG4WIN](http://www.gpg4win.com) pack
 
 ## Prerequisite
 Install GPG4WIN with GnuPG version 2.2.4.
+If you like to build the software on your own, you will need [Qt](https://www.qt.io/) 5.6.1.
+The tool basically parses gpg outputs, so gpgme is not required.
 
 ## Install
 Download the latest portable build in folder [dist](dist/), extract it and run gpghelper.exe.
