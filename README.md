@@ -39,8 +39,10 @@ The portable archive contains libraries from [Qt](https://www.qt.io/) 5.6.1.
 * The SSH fingerprint appears in fields "SSH Key". Most user will use "SSH Key (full)", which can be directly appended to your ~/.ssh/authorized_keys on your SSH server. "SSH Key (stripped)" is a convenience field that gives you only the central part with the key payload.
 
 ## Todo
-* Code is not very clean. Everything is put within the same class. At least, I should separate the gpg-related methods from the gui stuffs.
+* Code works but is not clean. Everything is put within the same class. At least, I should separate the gpg-related methods from the gui stuffs.
+* Terrible lack of inline documentation.
 * Robustness may be improved, probably.
 
-## Author
-Mathieu Allory: mathieu.allory _at_ gmail.com
+## Author & more
+Brought to you by Mathieu Allory: mathieu.allory _at_ gmail.com
+Software icon by [IconsMind](http://www.iconsmind.com)

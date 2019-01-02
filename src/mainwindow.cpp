@@ -157,10 +157,13 @@ void MainWindow::refresh_gui_buttons()
     }
     ui->pushButtonAuthorizeKey->setEnabled(can_authorize_key);
 
+    if (ui->lineEditRawSshKey->text().isEmpty()) ui->lineEditRawSshKey->setEnabled(false);
+    if (ui->lineEditStrippedSshKey->text().isEmpty()) ui->lineEditStrippedSshKey->setEnabled(false);
+
     ui->pushButtonAgentEnablePutty->setEnabled(ui->lineEditPageantSupport->text() == "false");
     // Copy buttons
-    ui->pushButtonRawSshKeyCopy->setEnabled(!ui->lineEditRawSshKey->text().isEmpty());
-    ui->pushButtonStrippedSshKeyCopy->setEnabled(!ui->lineEditStrippedSshKey->text().isEmpty());
+    ui->pushButtonRawSshKeyCopy->setEnabled(ui->lineEditRawSshKey->isEnabled());
+    ui->pushButtonStrippedSshKeyCopy->setEnabled(ui->lineEditStrippedSshKey->isEnabled());
 }
 
 void MainWindow::on_pushButtonClearFields_clicked()
@@ -179,10 +182,11 @@ void MainWindow::on_pushButtonClearFields_clicked()
 void MainWindow::on_pushButtonKeysQuery_clicked()
 {
     clear_keys();
-    QStringList result = execute("gpg", QStringList() << "--with-keygrip" << "-k").split("\r\n");
+    QStringList result = execute("gpg", QStringList() << "--with-keygrip" << "--fingerprint" << "--fingerprint" << "-k").split("\r\n");
 
     // Small state machine to parse the list of keys
     bool in_key_group = false;
+    bool in_sub = false;
     key* new_key = new key();
     for (QString line : result)
     {
@@ -190,7 +194,7 @@ void MainWindow::on_pushButtonKeysQuery_clicked()
         if (line.startsWith("pub"))
         {
             // entering new key group
-            if (in_key_group)
+            if (in_key_group || in_sub)
             {
                 goto error;
             }
@@ -212,6 +216,7 @@ void MainWindow::on_pushButtonKeysQuery_clicked()
             {
                 goto error;
             }
+            in_sub = true;
 
             // Parse pub
             sub a_sub = parse_key_sub(line);
@@ -222,7 +227,8 @@ void MainWindow::on_pushButtonKeysQuery_clicked()
         else if (line.startsWith("uid"))
         {
             // must be in a key group
-            if (in_key_group == false)
+            // uid shall appear before subkeys
+            if (in_key_group == false || in_sub)
             {
                 goto error;
             }
@@ -253,7 +259,7 @@ void MainWindow::on_pushButtonKeysQuery_clicked()
             new_key->subs.last().grip = rx_pub.match(line).captured("grip");
         }
 
-        // Parse hash (starts with 6 spaces)
+        // Parse hash/fingerprint (starts with 6 spaces)
         else if (line.startsWith("      ") && !line.contains("Keygrip"))
         {
             // must be in a key group
@@ -261,7 +267,19 @@ void MainWindow::on_pushButtonKeysQuery_clicked()
             {
                 goto error;
             }
-            new_key->hash = line.mid(6);
+            // Keep the fingerprint, remove whitespaces
+            QString fp = line.mid(6).remove(" ");
+            // The principal fingerprint is also the hash for the whole key
+            if (!in_sub)
+            {
+                new_key->hash = fp;
+            }
+            // Also add to the last sub parsed
+            if (new_key->subs.empty())
+            {
+                goto error;
+            }
+            new_key->subs.last().fingerprint = fp;
         }
 
         // empty line --> end group
@@ -270,6 +288,7 @@ void MainWindow::on_pushButtonKeysQuery_clicked()
             this->keys.push_back(new_key);
             new_key = new key();
             in_key_group = false;
+            in_sub = false;
         }
     }
     // Might leak of one key(), doesn't really matter
@@ -280,7 +299,7 @@ void MainWindow::on_pushButtonKeysQuery_clicked()
         log_text(k->hash + "\n");
         for (sub s : k->subs)
         {
-            log_text("- " + s.algo + (s.auth ? " AUTH " : " NO-AUTH ") + s.grip + "\n");
+            log_text("- " + s.algo + (s.auth ? " AUTH " : " NO-AUTH ") + s.grip + " " + s.fingerprint + "\n");
         }
         for (uid u : k->uids)
         {
@@ -353,7 +372,7 @@ void MainWindow::on_listWidgetKeys_currentItemChanged(QListWidgetItem *current, 
 {
     Q_UNUSED(previous)
 
-    QString fingerprint, result;
+    QString fingerprint, fingerprint_auth, result;
     QStringList tok_key;
 
     if (current == nullptr)
@@ -364,10 +383,42 @@ void MainWindow::on_listWidgetKeys_currentItemChanged(QListWidgetItem *current, 
     }
     // Get key fingerprint and print it
     fingerprint = current->data(Qt::UserRole).toString();
-    result = execute("gpg", QStringList() << "--export-ssh-key" << fingerprint + "!");
+    // The fingerprint we got is the one from the main, public key
+    // not necessarily the one from the [A] key - so get the right one
+    for (key* k : keys)
+    {
+        if (k->hash == fingerprint)
+        {
+            for(sub s: k->subs)
+            {
+                if (s.auth)
+                {
+                    fingerprint_auth = s.fingerprint;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (fingerprint_auth.isEmpty())
+    {
+        QString err_msg = "Cannot find a suitable key for ssh (no subkey with auth capability found) !";
+        ui->lineEditRawSshKey->setText(err_msg);
+        ui->lineEditRawSshKey->setEnabled(false);
+        ui->lineEditStrippedSshKey->setText(err_msg);
+        ui->lineEditStrippedSshKey->setEnabled(false);
+        goto go_out;
+    }
+
+    result = execute("gpg", QStringList() << "--export-ssh-key" << fingerprint_auth + "!");
     ui->lineEditRawSshKey->setText(result);
+    ui->lineEditRawSshKey->setEnabled(true);
     tok_key = result.split(" ");
-    if(tok_key.size() >= 3) ui->lineEditStrippedSshKey->setText(tok_key[1]);
+    if(tok_key.size() >= 3)
+    {
+        ui->lineEditStrippedSshKey->setText(tok_key[1]);
+        ui->lineEditStrippedSshKey->setEnabled(true);
+    }
 
 go_out:
     refresh_gui_buttons();

@@ -39,6 +39,7 @@ struct uid
 
 struct sub
 {
+    QString fingerprint;
     QString algo;
     bool auth;
     QString grip;

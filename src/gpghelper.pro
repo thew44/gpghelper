@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = gpghelper
 TEMPLATE = app
 
+RC_FILE = gpghelper.rc
 
 SOURCES += main.cpp\
         mainwindow.cpp
@@ -19,6 +20,3 @@ HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
 
-DISTFILES += \
-    README.md \
-    LICENSE.md
