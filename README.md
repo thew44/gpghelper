@@ -3,7 +3,7 @@ A tool to help using SSH with GPG keys on Windows.
 
 ![screenshot of gpghelper](screenshot.png)
 
-This small tool helps you having [putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/) (pageant) based SSH client authenticating with GPG keys, which can be somewhat tricky for non-computer-guys.
+This small tool helps you having [putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/) (pageant) based SSH client authenticating with GPG keys, which can be somewhat tricky for non-computer-guys.  
 Is is intended to work under Windows with [GPG4WIN](http://www.gpg4win.com) package.
 > **Note:** if you are using the cygwin flavor of GPG, this tool is not for you.
 
@@ -44,5 +44,5 @@ The portable archive contains libraries from [Qt](https://www.qt.io/) 5.6.1.
 * Robustness may be improved, probably.
 
 ## Author & more
-Brought to you by Mathieu Allory: mathieu.allory _at_ gmail.com
+Brought to you by Mathieu Allory: mathieu.allory _at_ gmail.com  
 Software icon by [IconsMind](http://www.iconsmind.com)
