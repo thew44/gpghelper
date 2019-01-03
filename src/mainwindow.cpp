@@ -525,6 +525,7 @@ void MainWindow::on_pushButtonAuthorizeKey_clicked()
                 log_text("No suitable key (allowing authentication) found for fingerprint " + k->hash + " \n", true);
             }
         }
+        ssh_control_file.close();
     }
 }
 
@@ -538,4 +539,27 @@ void MainWindow::on_pushButtonStrippedSshKeyCopy_clicked()
 {
     ui->lineEditStrippedSshKey->selectAll();
     ui->lineEditStrippedSshKey->copy();
+}
+
+void MainWindow::on_pushButtonAgentEnablePutty_clicked()
+{
+    // Append enable-putty-support at the end of gpg-agent.conf
+    // First try to open the file
+    QFile gpg_conf_file(gpg_dir + "/gpg-agent.conf");
+    gpg_conf_file.open(QIODevice::Append | QIODevice::Text);
+    if (!gpg_conf_file.isOpen())
+    {
+        log_text("ERROR: Cannot open " + gpg_conf_file.fileName() + " for modification\n");
+        return;
+    }
+
+    log_text("Adding 'enable-putty-support' to gpg-agent configuration file " + gpg_conf_file.fileName() + "\n", true);
+    QTextStream out(&gpg_conf_file);
+    out << "enable-putty-support" << endl;
+    gpg_conf_file.close();
+
+    // Reload configuration
+    this->on_pushButtonAgentGetConfig_clicked();
+    // Restart agent
+    this->on_pushButtonAgentRestart_clicked();
 }

@@ -105,6 +105,8 @@ private slots:
 
     void on_pushButtonStrippedSshKeyCopy_clicked();
 
+    void on_pushButtonAgentEnablePutty_clicked();
+
 private:
     sub parse_key_sub(const QString& i_line);
     void clear_keys();

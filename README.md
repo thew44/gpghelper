@@ -8,7 +8,7 @@ Is is intended to work under Windows with [GPG4WIN](http://www.gpg4win.com) pack
 > **Note:** if you are using the cygwin flavor of GPG, this tool is not for you.
 
 ## Prerequisite
-Install GPG4WIN with GnuPG version 2.2.4.
+Install GPG4WIN with GnuPG version 2.2.4. GnuPG bin directory must be in the PATH.
 If you like to build the software on your own, you will need [Qt](https://www.qt.io/) 5.6.1.
 The tool basically parses gpg outputs, so gpgme is not required.
 
